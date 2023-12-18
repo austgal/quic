@@ -19,13 +19,13 @@ const pubPort = 6666
 const subPort = 6667
 
 func main() {
-	go startServer(pubPort)
-	go startServer(subPort)
+	go startServer(pubPort, handlePublisher)
+	go startServer(subPort, handleSubscriber)
 
 	select {}
 }
 
-func startServer(port int) {
+func startServer(port int, handler func(quic.Connection)) {
 	udpConn, err := net.ListenUDP("udp4", &net.UDPAddr{Port: port})
 
 	tr := quic.Transport{
@@ -44,29 +44,12 @@ func startServer(port int) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		go handleConnection(connection)
+		go handler(connection)
 		//TODO: handle pub and sub separately
 	}
 }
 
 // TODO: move eror functions somewhere
-func handleConnection(connection quic.Connection) {
-	stream, err := connection.AcceptStream(context.Background())
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	buf := make([]byte, 1024)
-	for {
-		n, err := stream.Read(buf)
-		fmt.Println(string(buf[:n]))
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	}
-}
-
 func handlePublisher(connection quic.Connection) {
 	log.Printf("New publisher connected: %v\n", connection.RemoteAddr())
 	for {
