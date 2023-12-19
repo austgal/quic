@@ -7,7 +7,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
-	"fmt"
 	"log"
 	"math/big"
 	"net"
@@ -18,15 +17,27 @@ import (
 const pubPort = 6666
 const subPort = 6667
 
+// TODO: move to separate file
+// TODO: maybe add generic func
+
 func main() {
-	go startServer(pubPort, handlePublisher)
-	go startServer(subPort, handleSubscriber)
+	connections := &Connections{
+		subscribers: make(map[quic.Connection]struct{}),
+		publishers:  make(map[quic.Connection]struct{}),
+	}
+
+	go startServer(pubPort, connections.handlePublisher)
+	go startServer(subPort, connections.handleSubscriber)
 
 	select {}
 }
 
 func startServer(port int, handler func(quic.Connection)) {
 	udpConn, err := net.ListenUDP("udp4", &net.UDPAddr{Port: port})
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	tr := quic.Transport{
 		Conn: udpConn,
@@ -41,17 +52,19 @@ func startServer(port int, handler func(quic.Connection)) {
 
 	for {
 		connection, err := listener.Accept(context.Background())
+
 		if err != nil {
 			log.Fatal(err)
 		}
 		go handler(connection)
-		//TODO: handle pub and sub separately
 	}
 }
 
 // TODO: move eror functions somewhere
-func handlePublisher(connection quic.Connection) {
+func (c *Connections) handlePublisher(connection quic.Connection) {
 	log.Printf("New publisher connected: %v\n", connection.RemoteAddr())
+	c.addPublisher(connection)
+	log.Println(len(c.publishers), "pub length")
 	for {
 		stream, err := connection.AcceptStream(context.Background())
 		if err != nil {
@@ -60,11 +73,14 @@ func handlePublisher(connection quic.Connection) {
 		}
 
 		go func(stream quic.Stream) {
-
+			defer func() {
+				log.Printf("Publisher stream closed: %v\n", stream.StreamID())
+				c.removePublisher(connection)
+			}()
 			buf := make([]byte, 1024)
 			for {
 				n, err := stream.Read(buf)
-				fmt.Println(string(buf[:n]))
+				log.Println(string(buf[:n]))
 				if err != nil {
 					log.Println(err)
 					return
@@ -75,8 +91,10 @@ func handlePublisher(connection quic.Connection) {
 	}
 }
 
-func handleSubscriber(connection quic.Connection) {
+func (c *Connections) handleSubscriber(connection quic.Connection) {
 	log.Printf("New subscriber connected: %v\n", connection.RemoteAddr())
+	c.addSubscriber(connection)
+	log.Println(len(c.subscribers), "sub length")
 	for {
 		stream, err := connection.AcceptStream(context.Background())
 		if err != nil {
@@ -87,6 +105,7 @@ func handleSubscriber(connection quic.Connection) {
 		go func(stream quic.Stream) {
 			defer func() {
 				log.Printf("Subscriber stream closed: %v\n", stream.StreamID())
+				c.removeSubscriber(connection)
 			}()
 
 			buf := make([]byte, 1024)
