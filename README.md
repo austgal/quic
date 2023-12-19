@@ -21,3 +21,13 @@ Your code will be evaluated based on it’s readability, maintainability, robust
 ## About
 A pub/sub message broker server and communicates via QUIC (QUIC ).
 
+## Usage
+### Build image:
+```
+docker build -t broker .
+```
+
+### Run image:
+```
+docker run -p 6666:6666/udp -p 6667:6667/udp broker
+```
