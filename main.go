@@ -37,6 +37,7 @@ func startServer(port int, handler func(quic.Connection)) {
 
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
 
 	tr := quic.Transport{
@@ -46,6 +47,7 @@ func startServer(port int, handler func(quic.Connection)) {
 
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
 
 	log.Printf("Listening on port %v\n", port)
@@ -55,6 +57,7 @@ func startServer(port int, handler func(quic.Connection)) {
 
 		if err != nil {
 			log.Fatal(err)
+			return
 		}
 		go handler(connection)
 	}
@@ -64,7 +67,6 @@ func startServer(port int, handler func(quic.Connection)) {
 func (c *Connections) handlePublisher(connection quic.Connection) {
 	log.Printf("New publisher connected: %v\n", connection.RemoteAddr())
 	c.addPublisher(connection)
-	log.Println(len(c.publishers), "pub length")
 	for {
 		stream, err := connection.AcceptStream(context.Background())
 		if err != nil {
@@ -75,17 +77,26 @@ func (c *Connections) handlePublisher(connection quic.Connection) {
 		go func(stream quic.Stream) {
 			defer func() {
 				log.Printf("Publisher stream closed: %v\n", stream.StreamID())
+				log.Println(err)
 				c.removePublisher(connection)
 			}()
 			buf := make([]byte, 1024)
 			for {
+				if len(c.subscribers) == 0 {
+					_, err = stream.Write([]byte("No subscribers are connected"))
+					if err != nil {
+						log.Println(err)
+						return
+					}
+					break
+				}
 				n, err := stream.Read(buf)
 				log.Println(string(buf[:n]))
 				if err != nil {
 					log.Println(err)
 					return
 				}
-				//s.broadcastMessage(buf[:n])
+				c.broadcastMessage(buf[:n])
 			}
 		}(stream)
 	}
@@ -94,7 +105,7 @@ func (c *Connections) handlePublisher(connection quic.Connection) {
 func (c *Connections) handleSubscriber(connection quic.Connection) {
 	log.Printf("New subscriber connected: %v\n", connection.RemoteAddr())
 	c.addSubscriber(connection)
-	log.Println(len(c.subscribers), "sub length")
+
 	for {
 		stream, err := connection.AcceptStream(context.Background())
 		if err != nil {
@@ -119,6 +130,22 @@ func (c *Connections) handleSubscriber(connection quic.Connection) {
 				log.Printf("Received from subscriber %v: %v\n", stream.StreamID(), buf[:n])
 			}
 		}(stream)
+	}
+}
+
+func (c *Connections) broadcastMessage(message []byte) {
+	log.Println("broadcasting")
+	for subscriber := range c.subscribers {
+		stream, err := subscriber.OpenStream()
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		_, err = stream.Write(message)
+		log.Printf("Broadcasting message from publisher: %v\n", string(message))
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
