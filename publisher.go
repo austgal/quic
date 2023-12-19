@@ -17,30 +17,33 @@ func (c *Connections) handlePublisher(connection quic.Connection) {
 			return
 		}
 
-		go func(stream quic.Stream) {
-			defer func() {
-				log.Printf("Publisher stream closed: %v\n", stream.StreamID())
-				c.removePublisher(connection)
-			}()
-			buf := make([]byte, 1024)
-			for {
-				if len(c.subscribers) == 0 {
-					_, err = stream.Write([]byte("No subscribers are connected"))
-					if err != nil {
-						log.Println(err)
-						return
-					}
-					break
-				}
-				n, err := stream.Read(buf)
-				log.Println(string(buf[:n]))
-				if err != nil {
-					log.Println(err)
-					return
-				}
-				c.broadcastMessage(buf[:n])
+		go c.handlePubStream(stream)
+		defer func() {
+			log.Printf("Publisher stream closed: %v\n", stream.StreamID())
+			c.removePublisher(connection)
+		}()
+	}
+}
+
+func (c *Connections) handlePubStream(stream quic.Stream) {
+
+	buf := make([]byte, 1024)
+	for {
+		if len(c.subscribers) == 0 {
+			_, err := stream.Write([]byte("No subscribers are connected"))
+			if err != nil {
+				log.Println(err)
+				return
 			}
-		}(stream)
+			break
+		}
+		n, err := stream.Read(buf)
+		log.Println(string(buf[:n]))
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		c.broadcastMessage(buf[:n])
 	}
 }
 
