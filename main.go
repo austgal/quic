@@ -48,9 +48,8 @@ func startServer(port int, handler func(quic.Connection)) {
 func acceptConnections(listener quic.Listener, handler func(quic.Connection)) {
 	for {
 		connection, err := listener.Accept(context.Background())
-
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 			return
 		}
 		go handler(connection)
