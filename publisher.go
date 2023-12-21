@@ -17,15 +17,15 @@ func (c *Connections) handlePublisher(connection quic.Connection) {
 			return
 		}
 
-		go c.handlePubStream(stream)
-		defer func() {
-			log.Printf("Publisher stream closed: %v\n", stream.StreamID())
-			c.removePublisher(connection)
-		}()
+		go c.handlePubStream(stream, connection)
 	}
 }
 
-func (c *Connections) handlePubStream(stream quic.Stream) {
+func (c *Connections) handlePubStream(stream quic.Stream, connection quic.Connection) {
+	defer func() {
+		log.Printf("Publisher stream closed: %v\n", stream.StreamID())
+		c.removePublisher(connection)
+	}()
 
 	buf := make([]byte, 1024)
 	for {
