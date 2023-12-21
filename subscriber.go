@@ -18,15 +18,15 @@ func (c *Connections) handleSubscriber(connection quic.Connection) {
 			return
 		}
 
-		go c.handleSubStream(stream)
-		defer func() {
-			log.Printf("Subscriber stream closed: %v\n", stream.StreamID())
-			c.removeSubscriber(connection)
-		}()
+		go c.handleSubStream(stream, connection)
 	}
 }
 
-func (c *Connections) handleSubStream(stream quic.Stream) {
+func (c *Connections) handleSubStream(stream quic.Stream, connection quic.Connection) {
+	defer func() {
+		log.Printf("Subscriber stream closed: %v\n", stream.StreamID())
+		c.removeSubscriber(connection)
+	}()
 	buf := make([]byte, 1024)
 	for {
 		n, err := stream.Read(buf)
