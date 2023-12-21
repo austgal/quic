@@ -35,11 +35,11 @@ func startServer(port int, handler func(quic.Connection)) {
 		Conn: udpConn,
 	}
 	listener, err := tr.Listen(generateTLSConfig(), nil)
-
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
+	defer listener.Close()
 
 	log.Printf("Listening on port %v\n", port)
 	acceptConnections(*listener, handler)

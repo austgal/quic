@@ -16,6 +16,7 @@ func (c *Connections) handlePublisher(connection quic.Connection) {
 			log.Println(err)
 			return
 		}
+		defer stream.Close()
 
 		go c.handlePubStream(stream, connection)
 	}

@@ -17,6 +17,7 @@ func (c *Connections) handleSubscriber(connection quic.Connection) {
 			log.Println(err)
 			return
 		}
+		defer stream.Close()
 
 		go c.handleSubStream(stream, connection)
 	}
