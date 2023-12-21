@@ -38,12 +38,14 @@ func (c *Connections) handlePubStream(stream quic.Stream, connection quic.Connec
 			}
 			break
 		}
+
 		n, err := stream.Read(buf)
-		log.Println(string(buf[:n]))
 		if err != nil {
 			log.Println(err)
 			return
 		}
+		log.Println(string(buf[:n]))
+
 		c.broadcastMessage(buf[:n])
 	}
 }
