@@ -1,4 +1,3 @@
-# Use an official Go runtime as a parent image
 FROM golang:latest
 
 WORKDIR /go/src/app
