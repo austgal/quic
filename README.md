@@ -34,7 +34,6 @@ Please adjust the ports according to the needs.
 
 ### Other information
 - The TLS generating function was copied from the examples in the quic-go library, which are located [here](https://github.com/quic-go/quic-go/blob/d3c5f389d44797108a1bee7e06d5b92434c26d6d/example/echo/echo.go#L99C39-L99C39).
-- For server testing I've wrote a basic QUIC client, source code can be found [here](https://github.com/austgal/pubsub_client).
 
 ### Improvements and other ideas/concerns:
 - The project's folder structure could be better aligned with Go best practices.
