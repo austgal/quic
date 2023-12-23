@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockConnection is a mock implementation for the Connection interface
 type MockConnection struct {
 	mock.Mock
 }
@@ -87,42 +86,3 @@ func (m *MockConnection) SendDatagram(_ []byte) error {
 	args := m.Called()
 	return args.Error(0)
 }
-
-// type mockConnection struct{}
-// type mockConnectionState struct {
-// 	// Define fields as needed for your mock implementation
-// }
-
-// func (m *mockConnection) AcceptStream(context.Context) (quic.Stream, error) { return nil, nil }
-// func (m *mockConnection) AcceptUniStream(context.Context) (quic.ReceiveStream, error) {
-// 	return nil, nil
-// }
-// func (m *mockConnection) OpenStream() (quic.Stream, error) {
-// 	return nil, nil
-// }
-// func (m *mockConnection) OpenStreamSync() (quic.Stream, error) {
-// 	return nil, nil
-// }
-// func (m *mockConnection) OpenUniStream() (quic.Stream, error) {
-// 	return nil, nil
-// }
-// func (m *mockConnection) OpenUniStreamSync(context.Context) (quic.Stream, error) {
-// 	return nil, nil
-// }
-// func (m *mockConnection) LocalAddr() net.Addr  { return nil }
-// func (m *mockConnection) RemoteAddr() net.Addr { return nil }
-// func (m *mockConnection) CloseWithError(quic.ApplicationErrorCode, string) error {
-// 	return nil
-// }
-
-// func (m *mockConnection) ConnectionState() quic.ConnectionState {
-// 	// Return an instance of your mockConnectionState type
-// 	return &mockConnectionState{}
-// }
-
-// var _ quic.ConnectionState = &mockConnectionState{}
-
-// // Implement the quic.ConnectionState interface for mockConnectionState
-// func (m *mockConnectionState) ConnectionState() quic.ConnectionState {
-// 	return m
-// }
