@@ -7,9 +7,10 @@ import (
 	"github.com/quic-go/quic-go"
 )
 
+const new_sub_msg = "Subscriber connected"
+
 func (c *Connections) handleSubscriber(connection quic.Connection) {
 	log.Printf("New subscriber connected: %v\n", connection.RemoteAddr())
-	c.addSubscriber(connection)
 
 	for {
 		stream, err := connection.AcceptStream(context.Background())
@@ -17,25 +18,22 @@ func (c *Connections) handleSubscriber(connection quic.Connection) {
 			log.Println(err)
 			return
 		}
-		defer stream.Close()
-
-		go c.handleSubStream(stream, connection)
+		c.addSubscriber(stream)
+		defer func() {
+			c.removeSubscriber(stream)
+			log.Printf("subscriber stream closed: %v\n", stream.StreamID())
+			stream.Close()
+		}()
+		go c.informPublishers([]byte(new_sub_msg))
 	}
 }
 
-func (c *Connections) handleSubStream(stream quic.Stream, connection quic.Connection) {
-	defer func() {
-		log.Printf("Subscriber stream closed: %v\n", stream.StreamID())
-		c.removeSubscriber(connection)
-	}()
-	buf := make([]byte, 1024)
-	for {
-		n, err := stream.Read(buf)
+func (c *Connections) informPublishers(message []byte) {
+	for publisher := range c.publishers {
+		_, err := publisher.Write([]byte(message))
+		log.Printf("informing publisher : %v\n", string(message))
 		if err != nil {
 			log.Println(err)
-			return
 		}
-
-		log.Printf("Received from subscriber %v: %v\n", stream.StreamID(), buf[:n])
 	}
 }

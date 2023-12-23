@@ -7,35 +7,35 @@ import (
 )
 
 type Connections struct {
-	subscribers map[quic.Connection]struct{}
-	publishers  map[quic.Connection]struct{}
+	subscribers map[quic.Stream]struct{}
+	publishers  map[quic.Stream]struct{}
 	mu          sync.Mutex
 }
 
-func (c *Connections) addConnection(connection quic.Connection, connectionMap map[quic.Connection]struct{}) {
+func (c *Connections) addConnection(connection quic.Stream, connectionMap map[quic.Stream]struct{}) {
 	c.mu.Lock()
 	connectionMap[connection] = struct{}{}
 	c.mu.Unlock()
 }
 
-func (c *Connections) removeConnection(connection quic.Connection, connectionMap map[quic.Connection]struct{}) {
+func (c *Connections) removeConnection(connection quic.Stream, connectionMap map[quic.Stream]struct{}) {
 	c.mu.Lock()
 	delete(connectionMap, connection)
 	c.mu.Unlock()
 }
 
-func (c *Connections) addSubscriber(connection quic.Connection) {
+func (c *Connections) addSubscriber(connection quic.Stream) {
 	c.addConnection(connection, c.subscribers)
 }
 
-func (c *Connections) addPublisher(connection quic.Connection) {
+func (c *Connections) addPublisher(connection quic.Stream) {
 	c.addConnection(connection, c.publishers)
 }
 
-func (c *Connections) removeSubscriber(connection quic.Connection) {
+func (c *Connections) removeSubscriber(connection quic.Stream) {
 	c.removeConnection(connection, c.subscribers)
 }
 
-func (c *Connections) removePublisher(connection quic.Connection) {
+func (c *Connections) removePublisher(connection quic.Stream) {
 	c.removeConnection(connection, c.publishers)
 }
