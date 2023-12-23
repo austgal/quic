@@ -13,8 +13,8 @@ const subPort = 6667
 
 func main() {
 	connections := &Connections{
-		subscribers: make(map[quic.Connection]struct{}),
-		publishers:  make(map[quic.Connection]struct{}),
+		subscribers: make(map[quic.Stream]struct{}),
+		publishers:  make(map[quic.Stream]struct{}),
 	}
 
 	go startServer(pubPort, connections.handlePublisher)

@@ -9,11 +9,11 @@ import (
 
 func TestAddSubscriber(t *testing.T) {
 	connections := &Connections{
-		subscribers: make(map[quic.Connection]struct{}),
-		publishers:  make(map[quic.Connection]struct{}),
+		subscribers: make(map[quic.Stream]struct{}),
+		publishers:  make(map[quic.Stream]struct{}),
 	}
 
-	connection := &MockConnection{}
+	connection := &MockStream{}
 	connections.addSubscriber(connection)
 
 	assert.Contains(t, connections.subscribers, connection)
@@ -21,11 +21,11 @@ func TestAddSubscriber(t *testing.T) {
 
 func TestAddPublisher(t *testing.T) {
 	connections := &Connections{
-		subscribers: make(map[quic.Connection]struct{}),
-		publishers:  make(map[quic.Connection]struct{}),
+		subscribers: make(map[quic.Stream]struct{}),
+		publishers:  make(map[quic.Stream]struct{}),
 	}
 
-	connection := &MockConnection{}
+	connection := &MockStream{}
 	connections.addPublisher(connection)
 
 	assert.Contains(t, connections.publishers, connection)
@@ -33,11 +33,11 @@ func TestAddPublisher(t *testing.T) {
 
 func TestRemoveSubscriber(t *testing.T) {
 	connections := &Connections{
-		subscribers: make(map[quic.Connection]struct{}),
-		publishers:  make(map[quic.Connection]struct{}),
+		subscribers: make(map[quic.Stream]struct{}),
+		publishers:  make(map[quic.Stream]struct{}),
 	}
 
-	connection := &MockConnection{}
+	connection := &MockStream{}
 	connections.subscribers[connection] = struct{}{}
 	connections.removeSubscriber(connection)
 
@@ -46,11 +46,11 @@ func TestRemoveSubscriber(t *testing.T) {
 
 func TestRemovePublisher(t *testing.T) {
 	connections := &Connections{
-		subscribers: make(map[quic.Connection]struct{}),
-		publishers:  make(map[quic.Connection]struct{}),
+		subscribers: make(map[quic.Stream]struct{}),
+		publishers:  make(map[quic.Stream]struct{}),
 	}
 
-	connection := &MockConnection{}
+	connection := &MockStream{}
 	connections.publishers[connection] = struct{}{}
 	connections.removePublisher(connection)
 
